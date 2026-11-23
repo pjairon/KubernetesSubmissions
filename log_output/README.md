@@ -1,13 +1,21 @@
 # Log output
 
-Generates a random UUID on startup, keeps it in memory and prints it with a timestamp every 5 seconds.
+Aplicación dividida en dos contenedores dentro de un mismo pod, que comparten un volumen `emptyDir`:
 
-## Build and push the image
+- `writer`: al arrancar genera una cadena aleatoria y cada 5 segundos escribe en `log.txt` una línea con la hora y la cadena.
+- `reader`: servidor HTTP que, en un GET a `/`, devuelve el contenido de ese fichero.
 
-    docker build -t pjairon/log-output:1.1 .
-    docker push pjairon/log-output:1.1
+## Imágenes
 
-## Deploy to Kubernetes
+    docker build -t pjairon/log-output-writer:1.10 log_output/writer
+    docker build -t pjairon/log-output-reader:1.10 log_output/reader
+    docker push pjairon/log-output-writer:1.10
+    docker push pjairon/log-output-reader:1.10
 
-    kubectl create deployment log-output --image=pjairon/log-output:1.1
-    kubectl logs -f <pod-name>
+## Despliegue
+
+    kubectl apply -f log_output/manifests/deployment.yaml -f log_output/manifests/service.yaml
+
+La ruta `/` se publica con el Ingress compartido `shared-ingress` de `ping_pong/manifests`. No aplicar `log_output/manifests/ingress.yaml`, que choca con él.
+
+Las carpetas `writer/` y `reader/` contienen el código y el Dockerfile de cada contenedor. El `index.js` y el `Dockerfile` de la raíz son los de los ejercicios anteriores (1.1 a 1.9) y ya no se usan en el Deployment.
