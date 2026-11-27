@@ -19,3 +19,19 @@ Aplicación dividida en dos contenedores dentro de un mismo pod, que comparten u
 La ruta `/` se publica con el Ingress compartido `shared-ingress` de `ping_pong/manifests`. No aplicar `log_output/manifests/ingress.yaml`, que choca con él.
 
 Las carpetas `writer/` y `reader/` contienen el código y el Dockerfile de cada contenedor. El `index.js` y el `Dockerfile` de la raíz son los de los ejercicios anteriores (1.1 a 1.9) y ya no se usan en el Deployment.
+
+## Exercise 1.11: persisting data
+
+The reader container also mounts the PersistentVolumeClaim `shared-claim` in `/usr/src/app/pings`
+and shows the number of pings saved by ping-pong in the line `Ping / Pongs: N`.
+
+Create the folder in the node and the volume first (see `persistentvolumes/`):
+
+    docker exec k3d-k3s-default-agent-0 mkdir -p /tmp/kube
+    kubectl apply -f ../persistentvolumes
+
+Build and push the new reader image, then deploy:
+
+    docker build -t pjairon/log-output-reader:1.11 reader
+    docker push pjairon/log-output-reader:1.11
+    kubectl apply -f manifests/deployment.yaml
